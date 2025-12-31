@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Кот и клубки: Избегай клубков!</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(to bottom, #FFE4E1, #FFF0F5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            padding: 10px;
+            color: #333;
+            touch-action: manipulation;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        header {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: rgba(255, 182, 193, 0.9);
+            border-radius: 15px;
+            color: #8B4513;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 4px solid #FF69B4;
+        }
+        
+        h1 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #FF1493;
+            text-shadow: 2px 2px 0 #FFB6C1;
+        }
+        
+        .score-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 16px;
+            color: #8B4513;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            overflow: hidden;
+            background-color: #FFF5EE;
+            border-radius: 10px;
+            border: 6px solid #FFB6C1;
+            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.3);
+            margin-bottom: 15px;
+        }
+        
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(to top, #DEB887, #F5DEB3);
+            z-index: 1;
+            border-top: 3px solid #8B4513;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            background-color: #FF69B4;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 5px 0 #FF1493;
+        }
+        
+        .btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0px 0 #FF1493;
+        }
+        
+        .btn-restart {
+            background-color: #9370DB;
+            box-shadow: 0 5px 0 #663399;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 182, 193, 0.95);
+            color: #8B4513;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 10;
+            display: none;
+            border: 5px solid #FF69B4;
+            width: 90%;
+            max-width: 300px;
+        }
+        
+        .game-over h2 {
+            color: #FF1493;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .game-over p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 182, 193, 0.95);
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .start-screen h2 {
+            color: #FF1493;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+        
+        .start-screen p {
+            margin-bottom: 10px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        
+        .tap-to-start {
+            margin-top: 20px;
+            color: #9370DB;
+            font-size: 16px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        
+        .cat {
+            position: absolute;
+            bottom: 30px;
+            left: 50px;
+            width: 60px;
+            height: 50px;
+            z-index: 5;
+            transition: bottom 0.2s;
+        }
+        
+        .yarn-ball {
+            position: absolute;
+            bottom: 30px;
+            width: 35px;
+            height: 35px;
+            z-index: 4;
+            border-radius: 50%;
+        }
+        
+        .cloud {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 50px;
+            z-index: 2;
+        }
+        
+        .heart {
+            position: absolute;
+            color: #FF69B4;
+            font-size: 20px;
+            z-index: 3;
+            animation: float 3s infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 18px;
+            }
+            
+            #game-container {
+                height: 220px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>КОТ И КЛУБКИ</h1>
+            <div class="score-container">
+                <div>Счёт: <span id="score">0</span></div>
+                <div>Рекорд: <span id="high-score">0</span></div>
+            </div>
+        </header>
+        
+        <div id="game-container">
+            <canvas id="game-canvas"></canvas>
+            <div id="ground"></div>
+            
+            <div class="start-screen" id="start-screen">
+                <h2>КОТ И КЛУБКИ</h2>
+                <p>Прыгай, чтобы избегать клубков!</p>
+                <p>Нажмите на экран или пробел</p>
+                <div class="tap-to-start">НАЖМИТЕ, ЧТОБЫ НАЧАТЬ</div>
+            </div>
+            
+            <div class="game-over" id="game-over">
+                <h2>КОТ ЗАПУТАЛСЯ!</h2>
+                <p>Ваш счёт: <span id="final-score">0</span></p>
+                <p>Рекорд: <span id="final-high-score">0</span></p>
+                <button class="btn btn-restart" id="restart-btn">ИГРАТЬ СНОВА</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="jump-btn">ПРЫГАТЬ</button>
+            <button class="btn btn-restart" id="start-btn">СТАРТ</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Элементы игры
+            const canvas = document.getElementById('game-canvas');
+            const ctx = canvas.getContext('2d');
+            const gameContainer = document.getElementById('game-container');
+            const startScreen = document.getElementById('start-screen');
+            const gameOverScreen = document.getElementById('game-over');
+            const scoreElement = document.getElementById('score');
+            const highScoreElement = document.getElementById('high-score');
+            const finalScoreElement = document.getElementById('final-score');
+            const finalHighScoreElement = document.getElementById('final-high-score');
+            const startBtn = document.getElementById('start-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            const jumpBtn = document.getElementById('jump-btn');
+            
+            // Установка размеров canvas
+            function resizeCanvas() {
+                canvas.width = gameContainer.clientWidth;
+                canvas.height = gameContainer.clientHeight;
+            }
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Игровые переменные
+            let game = {
+                speed: 5,
+                score: 0,
+                highScore: localStorage.getItem('catYarnHighScore') || 0,
+                isRunning: false,
+                isJumping: false,
+                jumpVelocity: 0,
+                gravity: 0.6,
+                groundLevel: 30,
+                yarnBalls: [],
+                clouds: [],
+                hearts: [],
+                lastYarnTime: 0,
+                yarnInterval: 2000,
+                gameLoopId: null
+            };
+            
+            // Позиция кота
+            const cat = {
+                x: 50,
+                y: 0,
+                width: 60,
+                height: 50,
+                color: '#FF8C00' // Темно-оранжевый для кота
+            };
+            
+            // Цвета клубков
+            const yarnColors = ['#FF69B4', '#9370DB', '#00CED1', '#32CD32', '#FFD700', '#FF4500'];
+            
+            // Инициализация игры
+            function initGame() {
+                game.score = 0;
+                game.speed = 5;
+                game.isRunning = true;
+                game.isJumping = false;
+                game.jumpVelocity = 0;
+                game.yarnBalls = [];
+                game.clouds = [];
+                game.hearts = [];
+                game.lastYarnTime = 0;
+                game.yarnInterval = 2000;
+                
+                cat.y = canvas.height - game.groundLevel - cat.height;
+                
+                // Создаем несколько облаков
+                for (let i = 0; i < 5; i++) {
+                    game.clouds.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * (canvas.height / 3),
+                        width: 60 + Math.random() * 60,
+                        height: 30 + Math.random() * 30,
+                        speed: 0.5 + Math.random() * 1
+                    });
+                }
+                
+                // Создаем несколько сердечек
+                for (let i = 0; i < 3; i++) {
+                    game.hearts.push({
+                        x: Math.random() * canvas.width,
+                        y: canvas.height - game.groundLevel - 100 - Math.random() * 100,
+                        speed: 0.3 + Math.random() * 0.7
+                    });
+                }
+                
+                // Обновляем отображение счета
+                highScoreElement.textContent = game.highScore;
+                scoreElement.textContent = game.score;
+                
+                // Скрываем экраны
+                startScreen.style.display = 'none';
+                gameOverScreen.style.display = 'none';
+                
+                // Запускаем игровой цикл
+                if (game.gameLoopId) {
+                    cancelAnimationFrame(game.gameLoopId);
+                }
+                game.gameLoopId = requestAnimationFrame(gameLoop);
+            }
+            
+            // Игровой цикл
+            function gameLoop(timestamp) {
+                if (!game.isRunning) return;
+                
+                // Очистка canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Рисуем фон
+                ctx.fillStyle = '#FFF5EE';
+                ctx.fillRect(0, 0, canvas.width, canvas.height - game.groundLevel);
+                
+                // Рисуем облака
+                drawClouds();
+                
+                // Рисуем сердечки
+                drawHearts();
+                
+                // Рисуем землю
+                ctx.fillStyle = '#DEB887';
+                ctx.fillRect(0, canvas.height - game.groundLevel, canvas.width, game.groundLevel);
+                
+                // Рисуем траву на земле
+                ctx.fillStyle = '#32CD32';
+                for (let i = 0; i < canvas.width; i += 10) {
+                    ctx.fillRect(i, canvas.height - game.groundLevel, 5, 8);
+                }
+                
+                // Обновляем и рисуем кота
+                updateCat();
+                drawCat();
+                
+                // Обновляем и рисуем клубки
+                updateYarnBalls(timestamp);
+                drawYarnBalls();
+                
+                // Проверяем столкновения
+                checkCollisions();
+                
+                // Обновляем счет
+                updateScore();
+                
+                // Увеличиваем сложность
+                increaseDifficulty();
+                
+                // Продолжаем игровой цикл
+                game.gameLoopId = requestAnimationFrame(gameLoop);
+            }
+            
+            // Рисуем облака
+            function drawClouds() {
+                game.clouds.forEach(cloud => {
+                    // Перемещаем облако
+                    cloud.x -= cloud.speed;
+                    
+                    // Если облако ушло за левый край, перемещаем его вправо
+                    if (cloud.x + cloud.width < 0) {
+                        cloud.x = canvas.width;
+                        cloud.y = Math.random() * (canvas.height / 3);
+                    }
+                    
+                    // Рисуем облако
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.beginPath();
+                    ctx.ellipse(cloud.x + cloud.width/2, cloud.y + cloud.height/2, cloud.width/2, cloud.height/2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
+            // Рисуем сердечки
+            function drawHearts() {
+                game.hearts.forEach((heart, index) => {
+                    // Перемещаем сердечко
+                    heart.x -= heart.speed;
+                    
+                    // Если сердечко ушло за левый край, перемещаем его вправо
+                    if (heart.x < -20) {
+                        heart.x = canvas.width;
+                        heart.y = canvas.height - game.groundLevel - 100 - Math.random() * 100;
+                    }
+                    
+                    // Рисуем сердечко
+                    ctx.fillStyle = '#FF69B4';
+                    ctx.font = '20px Arial';
+                    ctx.fillText('❤', heart.x, heart.y);
+                });
+            }
+            
+            // Обновляем состояние кота
+            function updateCat() {
+                // Применяем гравитацию, если кот в прыжке
+                if (game.isJumping) {
+                    cat.y += game.jumpVelocity;
+                    game.jumpVelocity += game.gravity;
+                    
+                    // Если кот упал на землю
+                    if (cat.y >= canvas.height - game.groundLevel - cat.height) {
+                        cat.y = canvas.height - game.groundLevel - cat.height;
+                        game.isJumping = false;
+                        game.jumpVelocity = 0;
+                    }
+                }
+            }
+            
+            // Рисуем кота - УЛУЧШЕННАЯ ВЕРСИЯ
+            function drawCat() {
+                // Определяем состояние кота (бег/прыжок)
+                const isJumping = game.isJumping;
+                
+                // Тень под котом
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.beginPath();
+                ctx.ellipse(
+                    cat.x + cat.width/2 + 3, 
+                    canvas.height - game.groundLevel + 5, 
+                    cat.width/3, 
+                    cat.width/8, 
+                    0, 0, Math.PI * 2
+                );
+                ctx.fill();
+                
+                // Тело кота (более округлое и пушистое)
+                ctx.fillStyle = cat.color;
+                ctx.beginPath();
+                // Основное тело
+                ctx.ellipse(
+                    cat.x + cat.width/2, 
+                    cat.y + cat.height/2 + 10, 
+                    cat.width/3, 
+                    cat.height/3, 
+                    0, 0, Math.PI * 2
+                );
+                // Задняя часть
+                ctx.ellipse(
+                    cat.x + cat.width/1.5, 
+                    cat.y + cat.height/2 + 15, 
+                    cat.width/4, 
+                    cat.height/4, 
+                    0, 0, Math.PI * 2
+                );
+                ctx.fill();
+                
+                // Голова кота (круглая и симпатичная)
+                ctx.fillStyle = cat.color;
+                ctx.beginPath();
+                ctx.arc(cat.x + cat.width/3, cat.y + cat.height/3, cat.width/3.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Уши (треугольные)
+                ctx.fillStyle = cat.color;
+                // Левое ухо
+                ctx.beginPath();
+                ctx.moveTo(cat.x + cat.width/4, cat.y + cat.height/4);
+                ctx.lineTo(cat.x + cat.width/5, cat.y);
+                ctx.lineTo(cat.x + cat.width/3, cat.y + cat.height/6);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Правое ухо
+                ctx.beginPath();
+                ctx.moveTo(cat.x + cat.width/2.5, cat.y + cat.height/6);
+                ctx.lineTo(cat.x + cat.width/2.2, cat.y);
+                ctx.lineTo(cat.x + cat.width/1.8, cat.y + cat.height/4);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Внутренняя часть ушей (розовая)
+                ctx.fillStyle = '#FFB6C1';
+                // Левое ухо внутри
+                ctx.beginPath();
+                ctx.moveTo(cat.x + cat.width/4.2, cat.y + cat.height/4.5);
+                ctx.lineTo(cat.x + cat.width/4.8, cat.y + cat.height/12);
+                ctx.lineTo(cat.x + cat.width/3.2, cat.y + cat.height/6.5);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Правое ухо внутри
+                ctx.beginPath();
+                ctx.moveTo(cat.x + cat.width/2.3, cat.y + cat.height/6.5);
+                ctx.lineTo(cat.x + cat.width/2.1, cat.y + cat.height/12);
+                ctx.lineTo(cat.x + cat.width/1.85, cat.y + cat.height/4.5);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Глаза (большие и выразительные)
+                ctx.fillStyle = '#FFFFFF';
+                // Левый глаз
+                ctx.beginPath();
+                ctx.arc(cat.x + cat.width/4, cat.y + cat.height/3, 5, 0, Math.PI * 2);
+                ctx.fill();
+                // Правый глаз
+                ctx.beginPath();
+                ctx.arc(cat.x + cat.width/2.5, cat.y + cat.height/3, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Зрачки
+                ctx.fillStyle = '#000000';
+                // Левый зрачок
+                ctx.beginPath();
+                ctx.arc(cat.x + cat.width/4 + (isJumping ? -1 : 0), cat.y + cat.height/3, 2, 0, Math.PI * 2);
+                ctx.fill();
+                // Правый зрачок
+                ctx.beginPath();
+                ctx.arc(cat.x + cat.width/2.5 + (isJumping ? -1 : 0), cat.y + cat.height/3, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Блеск в глазах
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(cat.x + cat.width/4 - 1, cat.y + cat.height/3 - 1, 1, 0, Math.PI * 2);
+                ctx.arc(cat.x + cat.width/2.5 - 1, cat.y + cat.height/3 - 1, 1, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Нос (маленький треугольник)
+                ctx.fillStyle = '#FF69B4';
+                ctx.beginPath();
+                ctx.moveTo(cat.x + cat.width/3, cat.y + cat.height/2.3);
+                ctx.lineTo(cat.x + cat.width/3 - 3, cat.y + cat.height/2.1);
+                ctx.lineTo(cat.x + cat.width/3 + 3, cat.y + cat.height/2.1);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Рот (улыбка)
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(cat.x + cat.width/3, cat.y + cat.height/2, 4, 0.1 * Math.PI, 0.9 * Math.PI);
+                ctx.stroke();
+                
+                // Усы (длинные и симметричные)
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1;
+                // Левые усы
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(cat.x + cat.width/3, cat.y + cat.height/2.1);
+                    ctx.lineTo(cat.x + cat.width/3 - 12 - i*3, cat.y + cat.height/2.1 - 3 + i*2);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(cat.x + cat.width/3, cat.y + cat.height/2.1);
+                    ctx.lineTo(cat.x + cat.width/3 - 12 - i*3, cat.y + cat.height/2.1 + 3 - i*2);
+                    ctx.stroke();
+                }
+                // Правые усы
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(cat.x + cat.width/3, cat.y + cat.height/2.1);
+                    ctx.lineTo(cat.x + cat.width/3 + 12 + i*3, cat.y + cat.height/2.1 - 3 + i*2);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(cat.x + cat.width/3, cat.y + cat.height/2.1);
+                    ctx.lineTo(cat.x + cat.width/3 + 12 + i*3, cat.y + cat.height/2.1 + 3 - i*2);
+                    ctx.stroke();
+                }
+                
+                // Лапы
+                ctx.fillStyle = cat.color;
+                // Передние лапы
+                ctx.beginPath();
+                ctx.ellipse(cat.x + cat.width/4, cat.y + cat.height - 5, 6, 4, 0, 0, Math.PI * 2);
+                ctx.ellipse(cat.x + cat.width/2.5, cat.y + cat.height - 5, 6, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Задние лапы (только видна одна при беге)
+                ctx.beginPath();
+                ctx.ellipse(cat.x + cat.width/1.3, cat.y + cat.height - 5, 7, 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Хвост (пушистый и загнутый)
+                ctx.fillStyle = cat.color;
+                ctx.beginPath();
+                ctx.moveTo(cat.x + cat.width, cat.y + cat.height/1.5);
+                // Кривая Безье для хвоста
+                ctx.bezierCurveTo(
+                    cat.x + cat.width + 15, cat.y + cat.height/2,
+                    cat.x + cat.width + 25, cat.y + cat.height/3,
+                    cat.x + cat.width + 10, cat.y + cat.height/4
+                );
+                ctx.bezierCurveTo(
+                    cat.x + cat.width, cat.y + cat.height/5,
+                    cat.x + cat.width - 5, cat.y + cat.height/2,
+                    cat.x + cat.width, cat.y + cat.height/1.5
+                );
+                ctx.closePath();
+                ctx.fill();
+                
+                // Полоски на теле (для текстуры)
+                ctx.strokeStyle = '#D2691E';
+                ctx.lineWidth = 2;
+                // Полоска на спине
+                ctx.beginPath();
+                ctx.moveTo(cat.x + cat.width/4, cat.y + cat.height/3);
+                ctx.lineTo(cat.x + cat.width/1.2, cat.y + cat.height/3);
+                ctx.stroke();
+                
+                // Боковые полоски
+                ctx.beginPath();
+                ctx.moveTo(cat.x + cat.width/3, cat.y + cat.height/2);
+                ctx.lineTo(cat.x + cat.width/1.5, cat.y + cat.height/2.2);
+                ctx.stroke();
+            }
+            
+            // Прыжок кота
+            function jump() {
+                if (!game.isJumping && game.isRunning) {
+                    game.isJumping = true;
+                    game.jumpVelocity = -12;
+                }
+            }
+            
+            // Создаем клубок
+            function createYarnBall() {
+                const color = yarnColors[Math.floor(Math.random() * yarnColors.length)];
+                const size = 25 + Math.random() * 15;
+                
+                // Добавляем текстуру ниток
+                const texture = Math.random() > 0.5 ? 'striped' : 'spotted';
+                
+                game.yarnBalls.push({
+                    x: canvas.width,
+                    y: canvas.height - game.groundLevel - size,
+                    size: size,
+                    color: color,
+                    texture: texture
+                });
+            }
+            
+            // Обновляем клубки
+            function updateYarnBalls(timestamp) {
+                // Создаем новый клубок, если прошло достаточно времени
+                if (timestamp - game.lastYarnTime > game.yarnInterval) {
+                    createYarnBall();
+                    game.lastYarnTime = timestamp;
+                    
+                    // Случайным образом уменьшаем интервал для следующего клубка
+                    game.yarnInterval = Math.max(800, 2000 - game.score * 10);
+                }
+                
+                // Перемещаем клубки и удаляем те, что ушли за левый край
+                game.yarnBalls = game.yarnBalls.filter(yarnBall => {
+                    yarnBall.x -= game.speed;
+                    return yarnBall.x + yarnBall.size > 0;
+                });
+            }
+            
+            // Рисуем клубки
+            function drawYarnBalls() {
+                game.yarnBalls.forEach(yarnBall => {
+                    // Основной круг клубка
+                    ctx.fillStyle = yarnBall.color;
+                    ctx.beginPath();
+                    ctx.arc(yarnBall.x + yarnBall.size/2, yarnBall.y + yarnBall.size/2, yarnBall.size/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Текстура ниток
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.lineWidth = 2;
+                    
+                    if (yarnBall.texture === 'striped') {
+                        // Полосатый узор
+                        for (let i = 0; i < 4; i++) {
+                            ctx.beginPath();
+                            ctx.arc(yarnBall.x + yarnBall.size/2, yarnBall.y + yarnBall.size/2, yarnBall.size/3, 
+                                   Math.PI/2 * i, Math.PI/2 * i + Math.PI/4);
+                            ctx.stroke();
+                        }
+                    } else {
+                        // Точечный узор
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (Math.PI * 2) / 8 * i;
+                            const x = yarnBall.x + yarnBall.size/2 + Math.cos(angle) * yarnBall.size/3;
+                            const y = yarnBall.y + yarnBall.size/2 + Math.sin(angle) * yarnBall.size/3;
+                            
+                            ctx.beginPath();
+                            ctx.arc(x, y, 2, 0, Math.PI * 2);
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                            ctx.fill();
+                        }
+                    }
+                    
+                    // Отбрасывание тени
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                    ctx.beginPath();
+                    ctx.ellipse(yarnBall.x + yarnBall.size/2 + 2, yarnBall.y + yarnBall.size + 3, 
+                               yarnBall.size/2, yarnBall.size/6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
+            // Проверяем столкновения
+            function checkCollisions() {
+                const catCenterX = cat.x + cat.width/2;
+                const catCenterY = cat.y + cat.height/2;
+                const catRadius = Math.min(cat.width, cat.height)/2;
+                
+                for (let yarnBall of game.yarnBalls) {
+                    const yarnCenterX = yarnBall.x + yarnBall.size/2;
+                    const yarnCenterY = yarnBall.y + yarnBall.size/2;
+                    
+                    // Проверка столкновения по расстоянию между центрами
+                    const distance = Math.sqrt(
+                        Math.pow(catCenterX - yarnCenterX, 2) + 
+                        Math.pow(catCenterY - yarnCenterY, 2)
+                    );
+                    
+                    if (distance < catRadius + yarnBall.size/2) {
+                        // Столкновение произошло
+                        gameOver();
+                        break;
+                    }
+                }
+            }
+            
+            // Обновляем счет
+            function updateScore() {
+                game.score += 1;
+                scoreElement.textContent = game.score;
+            }
+            
+            // Увеличиваем сложность
+            function increaseDifficulty() {
+                // Увеличиваем скорость каждые 500 очков
+                if (game.score % 500 === 0) {
+                    game.speed += 0.5;
+                }
+            }
+            
+            // Конец игры
+            function gameOver() {
+                game.isRunning = false;
+                
+                // Обновляем рекорд
+                if (game.score > game.highScore) {
+                    game.highScore = game.score;
+                    localStorage.setItem('catYarnHighScore', game.highScore);
+                    highScoreElement.textContent = game.highScore;
+                }
+                
+                // Показываем экран окончания игры
+                finalScoreElement.textContent = game.score;
+                finalHighScoreElement.textContent = game.highScore;
+                gameOverScreen.style.display = 'block';
+                
+                // Останавливаем игровой цикл
+                cancelAnimationFrame(game.gameLoopId);
+            }
+            
+            // Обработчики событий
+            startBtn.addEventListener('click', initGame);
+            restartBtn.addEventListener('click', initGame);
+            jumpBtn.addEventListener('click', jump);
+            
+            // Управление с клавиатуры
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    jump();
+                }
+                
+                if (e.code === 'Enter' && !game.isRunning) {
+                    initGame();
+                }
+            });
+            
+            // Управление касанием
+            gameContainer.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                
+                if (!game.isRunning && startScreen.style.display !== 'none') {
+                    initGame();
+                } else {
+                    jump();
+                }
+            });
+            
+            // Управление кликом
+            gameContainer.addEventListener('click', () => {
+                if (!game.isRunning && startScreen.style.display !== 'none') {
+                    initGame();
+                } else if (game.isRunning) {
+                    jump();
+                }
+            });
+            
+            // Показываем начальный экран
+            startScreen.style.display = 'flex';
+            highScoreElement.textContent = game.highScore;
+        });
+    </script>
+</body>
+</html>
